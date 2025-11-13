@@ -17,10 +17,41 @@
                     <dd class="col-sm-8">{{ $movement->fecha_movimiento?->format('d/m/Y H:i') }}</dd>
                     <dt class="col-sm-4">Cantidad</dt>
                     <dd class="col-sm-8">{{ $movement->cantidad }}</dd>
-                    <dt class="col-sm-4">Observación</dt>
+                        <dt class="col-sm-4">Observación</dt>
                     <dd class="col-sm-8">{{ $movement->observacion ?? 'Sin observaciones' }}</dd>
+                    <dt class="col-sm-4">Documento asociado</dt>
+                    <dd class="col-sm-8">
+                        @if ($movement->reservation)
+                            <a href="{{ route('web.reservations.show', $movement->reservation) }}" class="link-primary">Reserva #{{ $movement->reservation->id_reserva }}</a>
+                        @elseif ($movement->returnHeader)
+                            <a href="{{ route('web.returns.show', $movement->returnHeader) }}" class="link-primary">Devolución #{{ $movement->returnHeader->id_devolucion }}</a>
+                        @else
+                            Registro manual
+                        @endif
+                    </dd>
                 </dl>
             </div>
+            @if ($movement->logs->isNotEmpty())
+                <div class="card-body border-top">
+                    <h2 class="h6">Bitácora</h2>
+                    <ul class="list-group list-group-flush">
+                        @foreach ($movement->logs as $log)
+                            <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                                <div>
+                                    <strong>{{ $log->descripcion }}</strong>
+                                    @if (!empty($log->contexto))
+                                        <pre class="mb-0 small text-muted">{{ json_encode($log->contexto, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                    @endif
+                                </div>
+                                <span class="text-muted small mt-2 mt-md-0">
+                                    <i class="bi bi-clock-history"></i>
+                                    {{ $log->created_at?->format('d/m/Y H:i:s') }}
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <div class="card-footer d-flex justify-content-between">
                 <a href="{{ route('web.movements.index') }}" class="btn btn-outline-secondary">Regresar</a>
                 <div class="d-flex gap-2">

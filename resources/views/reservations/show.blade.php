@@ -4,6 +4,19 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Reserva #{{ $reservation->id_reserva }}</h1>
     <div class="d-flex gap-2">
+        <form action="{{ route('web.reservations.status', $reservation) }}" method="POST" class="d-flex gap-2 align-items-center">
+            @csrf
+            @method('PATCH')
+            <select name="estado" class="form-select form-select-sm">
+                @foreach (App\Models\ReservationHeader::STATES as $estado)
+                    <option value="{{ $estado }}" @selected($reservation->estado === $estado)>{{ $estado }}</option>
+                @endforeach
+            </select>
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrow-repeat"></i>
+                Actualizar estado
+            </button>
+        </form>
         <a href="{{ route('web.reservation-details.create', ['reservation' => $reservation->id_reserva]) }}" class="btn btn-outline-primary">Agregar detalle</a>
         <a href="{{ route('web.reservations.edit', $reservation) }}" class="btn btn-primary">Editar</a>
     </div>

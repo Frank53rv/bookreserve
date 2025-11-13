@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Client;
 use App\Models\Movement;
+use App\Services\MovementRecorder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,8 +15,9 @@ class MovementController extends Controller
 {
     public function index(): View
     {
-        $movements = Movement::with(['client', 'book'])
-            ->latest('fecha_movimiento')
+        $movements = Movement::with(['client', 'book', 'reservation', 'returnHeader'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('fecha_movimiento')
             ->paginate(10);
 
         return view('movements.index', compact('movements'));
@@ -32,7 +34,7 @@ class MovementController extends Controller
         return view('movements.create', compact('clients', 'books', 'movementTypes'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MovementRecorder $movementRecorder): RedirectResponse
     {
         $data = $request->validate([
             'id_cliente' => ['required', 'exists:clients,id_cliente'],
@@ -43,14 +45,19 @@ class MovementController extends Controller
             'observacion' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Movement::create($data);
+        $movementRecorder->record(array_merge($data, [
+            'metadata' => [
+                'origen' => 'manual',
+                'registrado_por' => optional($request->user())->id,
+            ],
+        ]), 'Movimiento registrado manualmente');
 
         return redirect()->route('web.movements.index')->with('status', 'Movimiento registrado correctamente.');
     }
 
     public function show(Movement $movement): View
     {
-        $movement->load(['client', 'book']);
+        $movement->load(['client', 'book', 'logs' => fn ($query) => $query->latest('created_at'), 'reservation', 'returnHeader']);
 
         return view('movements.show', compact('movement'));
     }

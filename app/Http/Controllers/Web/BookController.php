@@ -14,7 +14,10 @@ class BookController extends Controller
 {
     public function index(): View
     {
-        $books = Book::with('category')->orderBy('titulo')->paginate(10);
+        $books = Book::with('category')
+            ->withCount('reservationDetails')
+            ->orderBy('titulo')
+            ->paginate(12);
 
         return view('books.index', compact('books'));
     }

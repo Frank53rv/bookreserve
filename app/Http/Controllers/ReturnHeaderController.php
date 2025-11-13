@@ -49,9 +49,9 @@ class ReturnHeaderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ReturnHeader $returnHeader): JsonResponse
+    public function show(ReturnHeader $return): JsonResponse
     {
-        return response()->json($returnHeader->load(['client', 'details.book']));
+        return response()->json($return->load(['client', 'details.book']));
     }
 
     /**
@@ -65,7 +65,7 @@ class ReturnHeaderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ReturnHeader $returnHeader): JsonResponse
+    public function update(Request $request, ReturnHeader $return): JsonResponse
     {
         $data = $request->validate([
             'id_cliente' => ['sometimes', 'required', 'exists:clients,id_cliente'],
@@ -73,17 +73,17 @@ class ReturnHeaderController extends Controller
             'estado' => ['sometimes', 'required', Rule::in(['Completa', 'Parcial'])],
         ]);
 
-        $returnHeader->update($data);
+        $return->update($data);
 
-        return response()->json($returnHeader->load(['client', 'details.book']));
+        return response()->json($return->load(['client', 'details.book']));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ReturnHeader $returnHeader): JsonResponse
+    public function destroy(ReturnHeader $return): JsonResponse
     {
-        $returnHeader->delete();
+        $return->delete();
 
         return response()->json(null, 204);
     }

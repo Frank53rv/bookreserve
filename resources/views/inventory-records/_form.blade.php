@@ -25,3 +25,15 @@
     <label for="observacion" class="form-label">Observación</label>
     <textarea class="form-control" id="observacion" name="observacion" rows="3">{{ old('observacion', $inventoryRecord->observacion ?? '') }}</textarea>
 </div>
+@if (!isset($inventoryRecord))
+    <div class="mb-3">
+        <label for="movement_client_id" class="form-label">Responsable del movimiento</label>
+        <select class="form-select" id="movement_client_id" name="movement_client_id" required>
+            <option value="">Selecciona un responsable</option>
+            @foreach ($clients as $id => $label)
+                <option value="{{ $id }}" @selected(old('movement_client_id') == $id)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <small class="text-muted">Este responsable se registrará en el historial de movimientos como ingreso.</small>
+    </div>
+@endif

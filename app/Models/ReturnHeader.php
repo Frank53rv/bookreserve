@@ -23,6 +23,11 @@ class ReturnHeader extends Model
         return $this->belongsTo(Client::class, 'id_cliente', 'id_cliente');
     }
 
+    public function reservation(): BelongsTo
+    {
+        return $this->belongsTo(ReservationHeader::class, 'id_reserva', 'id_reserva');
+    }
+
     public function details(): HasMany
     {
         return $this->hasMany(ReturnDetail::class, 'id_devolucion', 'id_devolucion');

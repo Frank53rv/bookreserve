@@ -26,4 +26,9 @@ class ReturnDetail extends Model
     {
         return $this->belongsTo(Book::class, 'id_libro', 'id_libro');
     }
+
+    public function reservationDetail(): BelongsTo
+    {
+        return $this->belongsTo(ReservationDetail::class, 'id_detalle_reserva', 'id_detalle_reserva');
+    }
 }

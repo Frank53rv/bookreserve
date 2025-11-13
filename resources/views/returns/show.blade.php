@@ -12,6 +12,7 @@
     <div class="col-lg-6">
         <div class="card shadow-sm mb-4">
             <div class="card-body">
+                <h2 class="h5 mb-3">Resumen de devolución</h2>
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Cliente</dt>
                     <dd class="col-sm-8">{{ $return->client?->nombre }} {{ $return->client?->apellido }}</dd>
@@ -23,6 +24,39 @@
             </div>
         </div>
     </div>
+    @if ($return->reservation)
+    <div class="col-lg-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Reserva vinculada</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Reserva</dt>
+                    <dd class="col-sm-8">#{{ $return->reservation->id_reserva }}</dd>
+                    <dt class="col-sm-4">Creada</dt>
+                    <dd class="col-sm-8">{{ $return->reservation->fecha_reserva?->format('d/m/Y H:i') }}</dd>
+                    <dt class="col-sm-4">Estado</dt>
+                    <dd class="col-sm-8">{{ $return->reservation->estado }}</dd>
+                </dl>
+
+                <div class="mt-3">
+                    <h3 class="h6 text-uppercase text-muted fw-semibold">Libros reservados</h3>
+                    @if ($return->reservation->details->isNotEmpty())
+                        <ul class="list-unstyled mb-0">
+                            @foreach ($return->reservation->details as $detail)
+                                <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <span>{{ $detail->book?->titulo ?? 'Libro no disponible' }}</span>
+                                    <span class="text-muted">× {{ $detail->cantidad }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="text-muted small mb-0">La reserva no tiene libros registrados.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 <div class="card shadow-sm">
     <div class="card-body p-0">

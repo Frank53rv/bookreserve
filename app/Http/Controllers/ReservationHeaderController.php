@@ -49,9 +49,9 @@ class ReservationHeaderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ReservationHeader $reservationHeader): JsonResponse
+    public function show(ReservationHeader $reservation): JsonResponse
     {
-        return response()->json($reservationHeader->load(['client', 'details.book']));
+        return response()->json($reservation->load(['client', 'details.book']));
     }
 
     /**
@@ -65,7 +65,7 @@ class ReservationHeaderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ReservationHeader $reservationHeader): JsonResponse
+    public function update(Request $request, ReservationHeader $reservation): JsonResponse
     {
         $data = $request->validate([
             'id_cliente' => ['sometimes', 'required', 'exists:clients,id_cliente'],
@@ -73,17 +73,17 @@ class ReservationHeaderController extends Controller
             'estado' => ['sometimes', 'required', Rule::in(['Pendiente', 'Retirado', 'Cancelado'])],
         ]);
 
-        $reservationHeader->update($data);
+        $reservation->update($data);
 
-        return response()->json($reservationHeader->load(['client', 'details.book']));
+        return response()->json($reservation->load(['client', 'details.book']));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ReservationHeader $reservationHeader): JsonResponse
+    public function destroy(ReservationHeader $reservation): JsonResponse
     {
-        $reservationHeader->delete();
+        $reservation->delete();
 
         return response()->json(null, 204);
     }

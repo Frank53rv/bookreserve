@@ -16,6 +16,8 @@ Route::view('/', 'home')->name('home');
 Route::resource('categories', CategoryController::class)->names('web.categories');
 Route::resource('books', BookController::class)->names('web.books');
 Route::resource('clients', ClientController::class)->names('web.clients');
+Route::patch('reservations/{reservation}/status', [ReservationController::class, 'updateStatus'])
+    ->name('web.reservations.status');
 Route::resource('reservations', ReservationController::class)->names('web.reservations');
 Route::resource('reservation-details', ReservationDetailController::class)
     ->only(['create', 'store', 'edit', 'update', 'destroy'])

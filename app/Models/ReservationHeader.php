@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ReservationHeader extends Model
 {
+    public const STATES = ['Pendiente', 'Retirado', 'Cancelado'];
+
     protected $table = 'reservation_headers';
 
     protected $primaryKey = 'id_reserva';
