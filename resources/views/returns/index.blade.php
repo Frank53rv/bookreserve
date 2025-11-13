@@ -76,7 +76,7 @@
                                 <span class="table-chip {{ $statusClass }}"><i class="bi bi-arrow-repeat"></i> {{ $status }}</span>
                             </td>
                             <td class="text-end">
-                                <div class="panel-actions justify-content-end">
+                                <div class="table-actions">
                                     <a href="{{ route('web.returns.show', $return) }}" class="btn btn-outline-soft"><i class="bi bi-eye"></i> Ver</a>
                                     <a href="{{ route('web.returns.edit', $return) }}" class="btn btn-primary btn-elevated"><i class="bi bi-pencil"></i> Editar</a>
                                     <form action="{{ route('web.returns.destroy', $return) }}" method="POST" onsubmit="return confirm('¿Eliminar devolución?');">

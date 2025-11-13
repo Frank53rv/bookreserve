@@ -74,7 +74,7 @@
                                 <span class="table-chip {{ $quantityClass }}"><i class="bi bi-stack"></i> {{ $movement->cantidad }}</span>
                             </td>
                             <td class="text-end">
-                                <div class="panel-actions justify-content-end">
+                                <div class="table-actions">
                                     <a href="{{ route('web.movements.show', $movement) }}" class="btn btn-outline-soft"><i class="bi bi-eye"></i> Ver</a>
                                     <a href="{{ route('web.movements.edit', $movement) }}" class="btn btn-primary btn-elevated"><i class="bi bi-pencil"></i> Editar</a>
                                     <form action="{{ route('web.movements.destroy', $movement) }}" method="POST" onsubmit="return confirm('¿Eliminar movimiento?');">

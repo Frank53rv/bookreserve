@@ -21,8 +21,6 @@
                         <tr>
                             <th>Nombre</th>
                             <th>DNI</th>
-                            <th>Correo</th>
-                            <th>Teléfono</th>
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
@@ -33,10 +31,8 @@
                                 <span class="table-cell-title"><i class="bi bi-person-circle"></i>{{ $client->nombre }} {{ $client->apellido }}</span>
                             </td>
                             <td class="table-cell-note"><i class="bi bi-credit-card-2-front"></i> {{ $client->dni }}</td>
-                            <td class="table-cell-note"><i class="bi bi-envelope"></i> {{ $client->correo }}</td>
-                            <td class="table-cell-note"><i class="bi bi-telephone"></i> {{ $client->telefono ?? 'Sin registrar' }}</td>
                             <td class="text-end">
-                                <div class="panel-actions justify-content-end">
+                                <div class="table-actions">
                                     <a href="{{ route('web.clients.show', $client) }}" class="btn btn-outline-soft"><i class="bi bi-eye"></i> Ver</a>
                                     <a href="{{ route('web.clients.edit', $client) }}" class="btn btn-primary btn-elevated"><i class="bi bi-pencil"></i> Editar</a>
                                     <form action="{{ route('web.clients.destroy', $client) }}" method="POST" onsubmit="return confirm('¿Eliminar cliente?');">

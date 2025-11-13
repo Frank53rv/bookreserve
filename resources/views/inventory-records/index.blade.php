@@ -43,7 +43,7 @@
                             </td>
                             <td class="table-cell-note"><i class="bi bi-truck"></i> {{ $record->proveedor ?? 'Sin registrar' }}</td>
                             <td class="text-end">
-                                <div class="panel-actions justify-content-end">
+                                <div class="table-actions">
                                     <a href="{{ route('web.inventory-records.show', $record) }}" class="btn btn-outline-soft"><i class="bi bi-eye"></i> Ver</a>
                                     <a href="{{ route('web.inventory-records.edit', $record) }}" class="btn btn-primary btn-elevated"><i class="bi bi-pencil"></i> Editar</a>
                                     <form action="{{ route('web.inventory-records.destroy', $record) }}" method="POST" onsubmit="return confirm('¿Eliminar ingreso?');">

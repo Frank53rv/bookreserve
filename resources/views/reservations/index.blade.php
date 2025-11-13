@@ -60,7 +60,7 @@
                                 <span class="table-chip {{ $statusClass }}"><i class="bi bi-circle-half"></i> {{ $status }}</span>
                             </td>
                             <td class="text-end">
-                                <div class="panel-actions justify-content-end">
+                                <div class="table-actions">
                                     <form action="{{ route('web.reservations.status', $reservation) }}" method="POST" class="d-flex flex-wrap align-items-center gap-2">
                                         @csrf
                                         @method('PATCH')

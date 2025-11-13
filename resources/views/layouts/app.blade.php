@@ -176,6 +176,22 @@
             flex-wrap: wrap;
         }
 
+        .table-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .table-actions form {
+            margin: 0;
+        }
+
+        .table-actions .btn {
+            white-space: nowrap;
+        }
+
         .data-panel-body {
             display: block;
             overflow: hidden;
@@ -226,7 +242,7 @@
 
         .table-modern tbody td {
             padding: 1.1rem 1.2rem;
-            vertical-align: middle;
+            vertical-align: top;
             border-top: none;
             background: #ffffff;
         }
@@ -241,18 +257,19 @@
 
         .table-modern .table-cell-title {
             display: inline-flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 0.6rem;
             font-weight: 600;
         }
 
         .table-modern .table-cell-title i {
             color: #2563eb;
+            margin-top: 0.25rem;
         }
 
         .table-modern .table-cell-note {
             display: inline-flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 0.55rem;
             color: rgba(15, 23, 42, 0.6);
             font-size: 0.92rem;

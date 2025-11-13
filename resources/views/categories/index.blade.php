@@ -32,7 +32,7 @@
                             </td>
                             <td class="table-cell-note">{{ $category->descripcion ?? 'Sin descripción registrada' }}</td>
                             <td class="text-end">
-                                <div class="panel-actions justify-content-end">
+                                <div class="table-actions">
                                     <a href="{{ route('web.categories.show', $category) }}" class="btn btn-outline-soft"><i class="bi bi-eye"></i> Ver</a>
                                     <a href="{{ route('web.categories.edit', $category) }}" class="btn btn-primary btn-elevated"><i class="bi bi-pencil"></i> Editar</a>
                                     <form action="{{ route('web.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('¿Eliminar categoría?');">
