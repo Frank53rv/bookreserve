@@ -576,6 +576,9 @@
         @if (session('status'))
             <div class="alert alert-success flash-modern">{{ session('status') }}</div>
         @endif
+        @if (session('warning'))
+            <div class="alert alert-warning flash-modern">{{ session('warning') }}</div>
+        @endif
         @yield('content')
     </div>
 </main>

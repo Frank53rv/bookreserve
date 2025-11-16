@@ -7,6 +7,16 @@
     <input type="text" class="form-control" id="autor" name="autor" value="{{ old('autor', $book->autor ?? '') }}" required>
 </div>
 <div class="mb-3">
+    <label for="cover_image" class="form-label">Portada del libro</label>
+    @if (isset($book) && $book->cover_image)
+        <div class="mb-2">
+            <img src="{{ Storage::url($book->cover_image) }}" alt="Current cover" class="img-thumbnail" style="max-width: 200px;">
+        </div>
+    @endif
+    <input type="file" class="form-control" id="cover_image" name="cover_image" accept="image/jpeg,image/png,image/jpg,image/webp">
+    <small class="form-text text-muted">Formatos permitidos: JPEG, PNG, JPG, WEBP (máx. 2MB)</small>
+</div>
+<div class="mb-3">
     <label for="id_editorial" class="form-label">Editorial</label>
     <select class="form-select" id="id_editorial" name="id_editorial">
         <option value="">Selecciona una editorial</option>

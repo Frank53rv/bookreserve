@@ -58,6 +58,38 @@
         min-height: 250px;
     }
 
+    .book-cover-wrapper {
+        width: 100%;
+        height: 220px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .book-cover-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .book-cover-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        font-size: 2.5rem;
+    }
+
+    .book-cover-placeholder small {
+        font-size: 0.85rem;
+    }
+
     .book-card::after {
         content: '';
         position: absolute;
@@ -231,6 +263,16 @@
                 $reservationCount = $book->reservation_details_count ?? 0;
             @endphp
             <article class="book-card">
+                <div class="book-cover-wrapper">
+                    @if ($book->cover_image)
+                        <img src="{{ Storage::url($book->cover_image) }}" alt="{{ $book->titulo }}">
+                    @else
+                        <div class="book-cover-placeholder">
+                            <i class="bi bi-book"></i>
+                            <small>Sin portada</small>
+                        </div>
+                    @endif
+                </div>
                 <div class="book-card-header">
                     <div>
                         <h2 class="book-card-title"><i class="bi bi-journal-text me-2"></i>{{ $book->titulo }}</h2>

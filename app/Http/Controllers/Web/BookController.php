@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
@@ -45,7 +46,13 @@ class BookController extends Controller
             'stock_actual' => ['required', 'integer', 'min:0'],
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'estado' => ['required', 'in:Disponible,No disponible'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ]);
+
+        // Handle cover upload
+        if ($request->hasFile('cover_image')) {
+            $data['cover_image'] = $request->file('cover_image')->store('covers', 'public');
+        }
 
         Book::create($data);
 
@@ -81,7 +88,17 @@ class BookController extends Controller
             'stock_actual' => ['required', 'integer', 'min:0'],
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'estado' => ['required', 'in:Disponible,No disponible'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ]);
+
+        // Handle cover upload
+        if ($request->hasFile('cover_image')) {
+            // Delete old cover
+            if ($book->cover_image) {
+                Storage::disk('public')->delete($book->cover_image);
+            }
+            $data['cover_image'] = $request->file('cover_image')->store('covers', 'public');
+        }
 
         $book->update($data);
 

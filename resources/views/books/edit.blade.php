@@ -5,7 +5,7 @@
     <div class="col-lg-8">
         <h1 class="h3 mb-3">Editar libro</h1>
         @include('components.validation-errors')
-        <form action="{{ route('web.books.update', $book) }}" method="POST" class="card card-body shadow-sm">
+        <form action="{{ route('web.books.update', $book) }}" method="POST" enctype="multipart/form-data" class="card card-body shadow-sm">
             @csrf
             @method('PUT')
             @include('books._form')
