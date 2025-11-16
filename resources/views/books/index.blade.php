@@ -4,6 +4,11 @@
 <style>
     .book-hero {
         padding: clamp(2.25rem, 3vw, 3rem);
+        background: rgba(7, 11, 30, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
+        box-shadow: 0 25px 60px rgba(2, 6, 23, 0.55);
+        backdrop-filter: blur(16px);
     }
 
     .book-hero-inner {
@@ -25,9 +30,10 @@
         gap: 0.75rem;
         padding: 0.65rem 1rem;
         border-radius: 999px;
-        background: #e2e8f0;
+        background: rgba(56, 189, 248, 0.15);
+        border: 1px solid rgba(56, 189, 248, 0.35);
         font-weight: 600;
-        color: #0f172a;
+        color: var(--text-primary);
     }
 
     .book-grid {
@@ -41,27 +47,24 @@
         overflow: hidden;
         padding: 1.75rem;
         border-radius: 24px;
-        background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 22px 42px rgba(15, 23, 42, 0.12);
+        background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.15), transparent 55%),
+            radial-gradient(circle at 100% 0%, rgba(192, 132, 252, 0.18), transparent 45%),
+            rgba(7, 9, 28, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 22px 50px rgba(2, 6, 23, 0.6);
         display: flex;
         flex-direction: column;
         gap: 1.1rem;
-        min-height: 230px;
+        min-height: 250px;
     }
 
-    .book-card::before {
+    .book-card::after {
         content: '';
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, #dbeafe 0%, #bae6fd 45%, #f0f9ff 100%);
-        z-index: 0;
-        opacity: 0.4;
-    }
-
-    .book-card > * {
-        position: relative;
-        z-index: 1;
+        border-radius: inherit;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        pointer-events: none;
     }
 
     .book-card-header {
@@ -74,12 +77,12 @@
     .book-card-title {
         font-size: 1.2rem;
         font-weight: 600;
-        color: #0f172a;
+        color: var(--text-primary);
         margin-bottom: 0.25rem;
     }
 
     .book-card-subtitle {
-        color: rgba(15, 24, 46, 0.6);
+        color: var(--text-muted);
         font-size: 0.95rem;
     }
 
@@ -87,84 +90,34 @@
         display: inline-flex;
         align-items: center;
         gap: 0.45rem;
-        padding: 0.45rem 0.75rem;
+        padding: 0.4rem 0.75rem;
         border-radius: 999px;
         font-size: 0.85rem;
         font-weight: 600;
-        background: #e0e7ff;
-        color: #1d4ed8;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
     }
 
     .book-chip-status {
         display: inline-flex;
         align-items: center;
         gap: 0.45rem;
-        padding: 0.45rem 0.75rem;
+        padding: 0.4rem 0.75rem;
         border-radius: 999px;
         font-size: 0.85rem;
         font-weight: 600;
-        background: #dcfce7;
-        color: #15803d;
+        background: rgba(74, 222, 128, 0.12);
+        color: #bbf7d0;
     }
 
     .book-chip-status.is-low {
-        background: #fef3c7;
-        color: #b45309;
+        background: rgba(250, 204, 21, 0.12);
+        color: #fef08a;
     }
 
     .book-chip-status.is-out {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-
-    .book-preview {
-        position: absolute;
-        inset: 15px;
-        padding: 1.4rem;
-        border-radius: 20px;
-        background: #0f172a;
-        color: #e2e8f0;
-        box-shadow: 0 20px 48px rgba(15, 23, 42, 0.45);
-        opacity: 0;
-        transform: translateY(10px) scale(0.97);
-        transition: opacity 0.2s ease, transform 0.25s ease;
-        pointer-events: none;
-        display: grid;
-        gap: 0.8rem;
-    }
-
-    .book-card:hover .book-preview,
-    .book-card:focus-within .book-preview {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-
-    .book-preview h3 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 0;
-    }
-
-    .book-preview p {
-        margin: 0;
-        font-size: 0.92rem;
-        line-height: 1.45;
-    }
-
-    .book-preview-meta {
-        display: grid;
-        gap: 0.6rem;
-        font-size: 0.85rem;
-        color: #cbd5f5;
-    }
-
-    .book-preview-meta span {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
+        background: rgba(251, 113, 133, 0.15);
+        color: #fecdd3;
     }
 
     .book-card-footer {
@@ -174,19 +127,61 @@
         flex-wrap: wrap;
     }
 
+    .book-insight {
+        padding: 1.25rem;
+        border-radius: 18px;
+        background: rgba(8, 12, 38, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .book-insight h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .book-insight p {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        color: var(--text-muted);
+    }
+
+    .book-insight-meta {
+        display: grid;
+        gap: 0.55rem;
+        font-size: 0.85rem;
+        color: rgba(226, 232, 240, 0.85);
+    }
+
+    .book-insight-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
     .empty-state {
         padding: 2.5rem;
+        background: rgba(7, 11, 30, 0.85);
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: center;
     }
 
     .empty-state-inner {
-        text-align: center;
-        color: rgba(15, 24, 46, 0.65);
+        color: var(--text-muted);
     }
 
     .empty-state-inner h3 {
         font-size: 1.4rem;
         font-weight: 600;
-        color: #0f172a;
+        color: var(--text-primary);
         margin-bottom: 0.75rem;
     }
 
@@ -194,10 +189,6 @@
         .book-card {
             padding: 1.5rem;
             min-height: auto;
-        }
-
-        .book-preview {
-            display: none;
         }
     }
 </style>
@@ -261,12 +252,12 @@
                         <button type="submit" class="btn btn-outline-soft btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button>
                     </form>
                 </div>
-                <div class="book-preview">
+                <div class="book-insight">
                     <h3><i class="bi bi-info-circle"></i> Vista rápida</h3>
                     <p>{{ \Illuminate\Support\Str::limit($summary, 150) }}</p>
-                    <div class="book-preview-meta">
+                    <div class="book-insight-meta">
                         <span><i class="bi bi-hash"></i> ISBN: {{ $book->isbn ?? 'Sin registro' }}</span>
-                        <span><i class="bi bi-calendar3"></i> Año de publicación: {{ $book->anio_publicacion ?? 'Pendiente' }}</span>
+                        <span><i class="bi bi-calendar3"></i> Año publicación: {{ $book->anio_publicacion ?? 'Pendiente' }}</span>
                         <span><i class="bi bi-graph-up"></i> Reservas activas: {{ $reservationCount }}</span>
                     </div>
                 </div>
