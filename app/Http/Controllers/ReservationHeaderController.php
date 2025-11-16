@@ -38,7 +38,7 @@ class ReservationHeaderController extends Controller
         $data = $request->validate([
             'id_cliente' => ['required', 'exists:clients,id_cliente'],
             'fecha_reserva' => ['required', 'date'],
-            'estado' => ['required', Rule::in(['Pendiente', 'Retirado', 'Cancelado'])],
+            'estado' => ['required', Rule::in(ReservationHeader::STATES)],
         ]);
 
         $reservation = ReservationHeader::create($data);
@@ -70,7 +70,7 @@ class ReservationHeaderController extends Controller
         $data = $request->validate([
             'id_cliente' => ['sometimes', 'required', 'exists:clients,id_cliente'],
             'fecha_reserva' => ['sometimes', 'required', 'date'],
-            'estado' => ['sometimes', 'required', Rule::in(['Pendiente', 'Retirado', 'Cancelado'])],
+            'estado' => ['sometimes', 'required', Rule::in(ReservationHeader::STATES)],
         ]);
 
         $reservation->update($data);

@@ -17,11 +17,17 @@ class Book extends Model
     protected $casts = [
         'anio_publicacion' => 'integer',
         'stock_actual' => 'integer',
+        'precio_venta' => 'decimal:2',
     ];
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'id_categoria', 'id_categoria');
+    }
+
+    public function editorial(): BelongsTo
+    {
+        return $this->belongsTo(Editorial::class, 'id_editorial', 'id_editorial');
     }
 
     public function reservationDetails(): HasMany
@@ -42,5 +48,15 @@ class Book extends Model
     public function movements(): HasMany
     {
         return $this->hasMany(Movement::class, 'id_libro', 'id_libro');
+    }
+
+    public function purchaseBatchItems(): HasMany
+    {
+        return $this->hasMany(PurchaseBatchItem::class, 'id_libro', 'id_libro');
+    }
+
+    public function saleDetails(): HasMany
+    {
+        return $this->hasMany(SaleDetail::class, 'id_libro', 'id_libro');
     }
 }

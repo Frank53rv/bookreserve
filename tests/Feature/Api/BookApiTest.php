@@ -25,15 +25,17 @@ class BookApiTest extends TestCase
     public function test_can_create_book(): void
     {
         $category = $this->makeCategory();
+        $editorial = $this->makeEditorial();
 
         $payload = [
             'titulo' => 'Nuevo Libro',
             'autor' => 'Autor Prueba',
-            'editorial' => 'Editorial Prueba',
+            'id_editorial' => $editorial->id_editorial,
             'anio_publicacion' => 2024,
             'isbn' => 'ISBN1234567890',
             'id_categoria' => $category->id_categoria,
             'stock_actual' => 7,
+            'precio_venta' => 59.9,
             'estado' => 'Disponible',
         ];
 
@@ -47,6 +49,7 @@ class BookApiTest extends TestCase
         $this->assertDatabaseHas('books', [
             'titulo' => 'Nuevo Libro',
             'id_categoria' => $category->id_categoria,
+            'id_editorial' => $editorial->id_editorial,
         ]);
     }
 

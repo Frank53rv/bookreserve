@@ -7,8 +7,13 @@
     <input type="text" class="form-control" id="autor" name="autor" value="{{ old('autor', $book->autor ?? '') }}" required>
 </div>
 <div class="mb-3">
-    <label for="editorial" class="form-label">Editorial</label>
-    <input type="text" class="form-control" id="editorial" name="editorial" value="{{ old('editorial', $book->editorial ?? '') }}">
+    <label for="id_editorial" class="form-label">Editorial</label>
+    <select class="form-select" id="id_editorial" name="id_editorial">
+        <option value="">Selecciona una editorial</option>
+        @foreach ($editorials as $id => $name)
+            <option value="{{ $id }}" @selected(old('id_editorial', $book->id_editorial ?? '') == $id)>{{ $name }}</option>
+        @endforeach
+    </select>
 </div>
 <div class="row g-3">
     <div class="col-md-4">
@@ -33,6 +38,13 @@
     <div class="col-md-4">
         <label for="stock_actual" class="form-label">Stock actual</label>
         <input type="number" class="form-control" id="stock_actual" name="stock_actual" value="{{ old('stock_actual', $book->stock_actual ?? 0) }}" min="0" required>
+    </div>
+    <div class="col-md-4">
+        <label for="precio_venta" class="form-label">Precio de venta</label>
+        <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" step="0.01" class="form-control" id="precio_venta" name="precio_venta" value="{{ old('precio_venta', $book->precio_venta ?? 0) }}" min="0" required>
+        </div>
     </div>
     <div class="col-md-4">
         <label for="estado" class="form-label">Estado</label>

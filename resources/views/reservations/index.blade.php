@@ -22,7 +22,8 @@
                             <th>ID</th>
                             <th>Cliente</th>
                             <th>Libros reservados</th>
-                            <th>Fecha</th>
+                            <th>Fechas</th>
+                            <th>Progreso</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
@@ -30,12 +31,20 @@
                     <tbody>
                     @foreach ($reservations as $reservation)
                         @php
+                            $reservedTotal = $reservation->details->sum('cantidad');
+                            $returnedTotal = $reservation->details->sum(fn($detail) => min($detail->cantidad, $detail->returnedQuantity()));
+                            $pendingTotal = max($reservedTotal - $returnedTotal, 0);
+                            $progress = $reservedTotal > 0 ? round(($returnedTotal / $reservedTotal) * 100) : 0;
                             $status = $reservation->estado ?? 'Sin estado';
                             $statusClass = match (strtolower($status)) {
-                                'completada', 'devuelta', 'finalizada' => 'success',
-                                'cancelada', 'anulada' => 'danger',
+                                'completado' => 'success',
+                                'parcial' => 'warning',
+                                'cancelado' => 'danger',
+                                'reservado' => 'info',
                                 default => '',
                             };
+                            $estimated = $reservation->fecha_estimada_devolucion;
+                            $isLate = $estimated && $estimated->isPast() && $reservation->estado !== 'Completado';
                         @endphp
                         <tr>
                             <td>
@@ -45,17 +54,49 @@
                             <td>
                                 <div class="d-flex flex-column gap-1">
                                     @forelse ($reservation->details as $detail)
-                                        <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2 fw-medium">
+                                        @php
+                                            $remaining = $detail->remainingQuantity();
+                                            $returned = $detail->cantidad - $remaining;
+                                            $detailStatus = $remaining === 0 ? 'bg-success-subtle text-success-emphasis' : 'bg-warning-subtle text-warning-emphasis';
+                                        @endphp
+                                        <span class="badge {{ $detailStatus }} rounded-pill px-3 py-2 fw-medium">
                                             <i class="bi bi-bookmark"></i>
-                                            {{ $detail->book?->titulo }}
-                                            <span class="text-muted ms-2">× {{ $detail->cantidad }}</span>
+                                            {{ $detail->book?->titulo ?? 'Libro sin título' }}
+                                            <span class="text-muted ms-2">{{ $returned }}/{{ $detail->cantidad }} devueltos</span>
+                                            @if ($remaining > 0)
+                                                <span class="ms-1 text-danger-emphasis">({{ $remaining }} pendiente{{ $remaining === 1 ? '' : 's' }})</span>
+                                            @endif
                                         </span>
                                     @empty
                                         <span class="text-muted small">Sin libros asociados</span>
                                     @endforelse
                                 </div>
                             </td>
-                            <td class="table-cell-note"><i class="bi bi-clock-history"></i> {{ $reservation->fecha_reserva?->format('d/m/Y H:i') ?? 'Sin fecha' }}</td>
+                            <td class="table-cell-note">
+                                <div class="d-flex flex-column">
+                                    <span><i class="bi bi-clock-history"></i> {{ $reservation->fecha_reserva?->format('d/m/Y H:i') ?? 'Sin fecha' }}</span>
+                                    @if ($estimated)
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar-event"></i>
+                                            {{ $estimated->format('d/m/Y H:i') }}
+                                            @if ($isLate)
+                                                <span class="badge bg-danger-subtle text-danger-emphasis ms-1">Vencida</span>
+                                            @endif
+                                        </small>
+                                    @else
+                                        <small class="text-muted">Sin fecha estimada</small>
+                                    @endif
+                                </div>
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar @if($progress === 100) bg-success @elseif($progress >= 50) bg-warning @else bg-danger @endif" role="progressbar" style="width: {{ $progress }}%" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">{{ $returnedTotal }} devueltos de {{ $reservedTotal }}</small>
+                                @if ($pendingTotal > 0)
+                                    <small class="text-danger">{{ $pendingTotal }} pendiente{{ $pendingTotal === 1 ? '' : 's' }}</small>
+                                @endif
+                            </td>
                             <td>
                                 <span class="table-chip {{ $statusClass }}"><i class="bi bi-circle-half"></i> {{ $status }}</span>
                             </td>

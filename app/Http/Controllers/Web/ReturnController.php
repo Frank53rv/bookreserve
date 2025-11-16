@@ -7,6 +7,7 @@ use App\Models\Book;
 use App\Models\Client;
 use App\Models\ReservationHeader;
 use App\Models\ReturnHeader;
+use App\Models\Movement;
 use App\Services\MovementRecorder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -64,16 +65,13 @@ class ReturnController extends Controller
         ]);
 
         $return = DB::transaction(function () use ($data, $movementRecorder) {
-            $reservation = ReservationHeader::with(['details'])->findOrFail($data['id_reserva']);
+            $reservation = ReservationHeader::with(['details.book', 'details.returnDetails'])->findOrFail($data['id_reserva']);
 
             if ((int) $reservation->id_cliente !== (int) $data['id_cliente']) {
                 throw ValidationException::withMessages([
                     'id_cliente' => 'El cliente seleccionado debe coincidir con el de la reserva vinculada.',
                 ]);
             }
-
-            $return = ReturnHeader::create(collect($data)->except('items')->all());
-            $return->load('client');
 
             $items = collect($data['items'])->map(fn ($item) => [
                 'id_libro' => (int) $item['id_libro'],
@@ -86,8 +84,16 @@ class ReturnController extends Controller
                 ]);
             }
 
-            $items->each(function (array $item) use ($return, $reservation, $movementRecorder) {
-                $reservationDetail = $reservation->details->firstWhere('id_libro', (int) $item['id_libro']);
+            $bookIds = $items->pluck('id_libro')->unique();
+            $books = Book::whereIn('id_libro', $bookIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id_libro');
+
+            $detailsByBook = $reservation->details->keyBy('id_libro');
+
+            foreach ($items as $item) {
+                $reservationDetail = $detailsByBook->get($item['id_libro']);
 
                 if (! $reservationDetail) {
                     throw ValidationException::withMessages([
@@ -95,24 +101,43 @@ class ReturnController extends Controller
                     ]);
                 }
 
-                if ((int) $item['cantidad_devuelta'] > $reservationDetail->cantidad) {
+                $remaining = $reservationDetail->remainingQuantity();
+
+                if ($item['cantidad_devuelta'] > $remaining) {
                     throw ValidationException::withMessages([
-                        'items' => 'La cantidad devuelta supera la cantidad reservada.',
+                        'items' => sprintf('La devolución de "%s" supera lo pendiente. Restante: %d.', $reservationDetail->book?->titulo, $remaining),
                     ]);
                 }
 
+                if (! $books->has($item['id_libro'])) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El libro seleccionado no existe.',
+                    ]);
+                }
+            }
+
+            $payload = collect($data)->except('items');
+            $payload['estado'] = $payload['estado'] ?? 'Parcial';
+
+            $return = ReturnHeader::create($payload->all());
+            $return->load('client');
+
+            foreach ($items as $item) {
+                /** @var \App\Models\ReservationDetail $reservationDetail */
+                $reservationDetail = $detailsByBook->get($item['id_libro']);
                 $detail = $return->details()->create([
                     'id_libro' => $item['id_libro'],
                     'cantidad_devuelta' => $item['cantidad_devuelta'],
-                    'id_detalle_reserva' => $reservationDetail->id_detalle_reserva,
+                    'id_detalle_reserva' => $reservationDetail?->id_detalle_reserva,
                 ])->load('book');
 
+                $books->get($item['id_libro'])?->increment('stock_actual', $item['cantidad_devuelta']);
                 $movementRecorder->recordReturnMovement($return, $detail);
-            });
-
-            if ($return->estado === 'Completa') {
-                $reservation->update(['estado' => 'Retirado']);
             }
+
+            $reservation->refreshLoanState();
+
+            $return->update(['estado' => $reservation->estado === 'Completado' ? 'Completa' : 'Parcial']);
 
             return $return;
         });
@@ -155,20 +180,20 @@ class ReturnController extends Controller
         return view('returns.edit', compact('return', 'clients', 'books', 'reservations'));
     }
 
-    public function update(Request $request, ReturnHeader $return): RedirectResponse
+    public function update(Request $request, ReturnHeader $return, MovementRecorder $movementRecorder): RedirectResponse
     {
         $data = $request->validate([
             'id_cliente' => ['required', 'exists:clients,id_cliente'],
             'id_reserva' => ['required', 'exists:reservation_headers,id_reserva'],
             'fecha_devolucion' => ['required', 'date'],
             'estado' => ['required', 'in:Completa,Parcial'],
-            'items' => ['nullable', 'array'],
-            'items.*.id_libro' => ['required_with:items', 'exists:books,id_libro'],
-            'items.*.cantidad_devuelta' => ['required_with:items', 'integer', 'min:1'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.id_libro' => ['required', 'exists:books,id_libro'],
+            'items.*.cantidad_devuelta' => ['required', 'integer', 'min:1'],
         ]);
 
-        DB::transaction(function () use ($return, $data) {
-            $reservation = ReservationHeader::with('details')->findOrFail($data['id_reserva']);
+        DB::transaction(function () use ($return, $data, $movementRecorder) {
+            $reservation = ReservationHeader::with(['details.book', 'details.returnDetails'])->findOrFail($data['id_reserva']);
 
             if ((int) $reservation->id_cliente !== (int) $data['id_cliente']) {
                 throw ValidationException::withMessages([
@@ -176,31 +201,89 @@ class ReturnController extends Controller
                 ]);
             }
 
-            $return->update(collect($data)->except('items')->all());
+            $items = collect($data['items'])->map(fn ($item) => [
+                'id_libro' => (int) $item['id_libro'],
+                'cantidad_devuelta' => (int) $item['cantidad_devuelta'],
+            ]);
 
-            if (! empty($data['items'])) {
-                $items = collect($data['items'])->map(fn ($item) => [
-                    'id_libro' => (int) $item['id_libro'],
-                    'cantidad_devuelta' => (int) $item['cantidad_devuelta'],
+            if ($items->pluck('id_libro')->duplicates()->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'items' => 'No se puede repetir el mismo libro en la devolución.',
                 ]);
+            }
 
-                if ($items->pluck('id_libro')->duplicates()->isNotEmpty()) {
+            $return->loadMissing('details.book');
+
+            $bookIds = $items->pluck('id_libro')
+                ->merge($return->details->pluck('id_libro'))
+                ->unique();
+
+            $books = Book::whereIn('id_libro', $bookIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id_libro');
+
+            foreach ($return->details as $detail) {
+                $book = $books->get($detail->id_libro);
+
+                if (! $book) {
                     throw ValidationException::withMessages([
-                        'items' => 'No se puede repetir el mismo libro en la devolución.',
+                        'items' => 'El libro asociado a la devolución ya no existe.',
                     ]);
                 }
 
-                $return->details()->delete();
-                $return->details()->createMany($items->map(function (array $item) use ($reservation) {
-                    $reservationDetail = $reservation->details->firstWhere('id_libro', $item['id_libro']);
+                if ($book->stock_actual < $detail->cantidad_devuelta) {
+                    throw ValidationException::withMessages([
+                        'items' => sprintf('No hay stock disponible para revertir la devolución de "%s". Disponible: %d.', $book->titulo, $book->stock_actual),
+                    ]);
+                }
 
-                    return [
-                        'id_libro' => $item['id_libro'],
-                        'cantidad_devuelta' => $item['cantidad_devuelta'],
-                        'id_detalle_reserva' => $reservationDetail?->id_detalle_reserva,
-                    ];
-                })->all());
+                $book->decrement('stock_actual', $detail->cantidad_devuelta);
             }
+
+            Movement::where('id_devolucion', $return->id_devolucion)->delete();
+            $return->details()->delete();
+
+            $return->update(collect($data)->except('items')->all());
+
+            $reservation->load('details.returnDetails');
+            $detailsByBook = $reservation->details->keyBy('id_libro');
+
+            foreach ($items as $item) {
+                $reservationDetail = $detailsByBook->get($item['id_libro']);
+
+                if (! $reservationDetail) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El libro seleccionado no forma parte de la reserva vinculada.',
+                    ]);
+                }
+
+                $remaining = $reservationDetail->remainingQuantity();
+
+                if ($item['cantidad_devuelta'] > $remaining) {
+                    throw ValidationException::withMessages([
+                        'items' => sprintf('La devolución de "%s" supera lo pendiente. Restante: %d.', $reservationDetail->book?->titulo, $remaining),
+                    ]);
+                }
+
+                if (! $books->has($item['id_libro'])) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El libro seleccionado no existe.',
+                    ]);
+                }
+
+                $detail = $return->details()->create([
+                    'id_libro' => $item['id_libro'],
+                    'cantidad_devuelta' => $item['cantidad_devuelta'],
+                    'id_detalle_reserva' => $reservationDetail->id_detalle_reserva,
+                ])->load('book');
+
+                $books->get($item['id_libro'])?->increment('stock_actual', $item['cantidad_devuelta']);
+                $movementRecorder->recordReturnMovement($return, $detail);
+            }
+
+            $reservation->refreshLoanState();
+            $return->update(['estado' => $reservation->estado === 'Completado' ? 'Completa' : 'Parcial']);
         });
 
         return redirect()->route('web.returns.show', $return)->with('status', 'Devolución actualizada correctamente.');
@@ -208,7 +291,42 @@ class ReturnController extends Controller
 
     public function destroy(ReturnHeader $return): RedirectResponse
     {
-        $return->delete();
+        DB::transaction(function () use ($return) {
+            $return->load(['details.book', 'reservation.details.returnDetails']);
+
+            $bookIds = $return->details->pluck('id_libro')->unique();
+            $books = Book::whereIn('id_libro', $bookIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id_libro');
+
+            foreach ($return->details as $detail) {
+                $book = $books->get($detail->id_libro);
+
+                if (! $book) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El libro asociado a la devolución ya no existe.',
+                    ]);
+                }
+
+                if ($book->stock_actual < $detail->cantidad_devuelta) {
+                    throw ValidationException::withMessages([
+                        'items' => sprintf('No hay stock disponible para revertir la devolución de "%s". Disponible: %d.', $book->titulo, $book->stock_actual),
+                    ]);
+                }
+
+                $book->decrement('stock_actual', $detail->cantidad_devuelta);
+            }
+
+            $reservation = $return->reservation;
+
+            Movement::where('id_devolucion', $return->id_devolucion)->delete();
+            $return->delete();
+
+            if ($reservation) {
+                $reservation->refreshLoanState();
+            }
+        });
 
         return redirect()->route('web.returns.index')->with('status', 'Devolución eliminada correctamente.');
     }

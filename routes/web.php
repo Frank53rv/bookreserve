@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\InventoryRecordController;
 use App\Http\Controllers\Web\MovementController;
 use App\Http\Controllers\Web\ReservationController;
 use App\Http\Controllers\Web\ReservationDetailController;
+use App\Http\Controllers\Web\SaleController;
 use App\Http\Controllers\Web\ReturnController;
 use App\Http\Controllers\Web\ReturnDetailController;
 use Illuminate\Support\Facades\Route;
@@ -28,3 +29,5 @@ Route::resource('return-details', ReturnDetailController::class)
     ->names('web.return-details');
 Route::resource('inventory-records', InventoryRecordController::class)->names('web.inventory-records');
 Route::resource('movements', MovementController::class)->names('web.movements');
+Route::get('sales/{sale}/ticket', [SaleController::class, 'ticket'])->name('web.sales.ticket');
+Route::resource('sales', SaleController::class)->names('web.sales');

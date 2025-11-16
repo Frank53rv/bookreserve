@@ -28,19 +28,19 @@ class ReservationHeaderApiTest extends TestCase
         $payload = [
             'id_cliente' => $client->id_cliente,
             'fecha_reserva' => now()->toDateTimeString(),
-            'estado' => 'Pendiente',
+            'estado' => 'Reservado',
         ];
 
         $response = $this->postJson('/api/reservations', $payload);
 
         $response->assertCreated()->assertJsonFragment([
             'id_cliente' => $client->id_cliente,
-            'estado' => 'Pendiente',
+            'estado' => 'Reservado',
         ]);
 
         $this->assertDatabaseHas('reservation_headers', [
             'id_cliente' => $client->id_cliente,
-            'estado' => 'Pendiente',
+            'estado' => 'Reservado',
         ]);
     }
 
@@ -57,19 +57,19 @@ class ReservationHeaderApiTest extends TestCase
 
     public function test_can_update_reservation(): void
     {
-        $reservation = $this->makeReservation(['estado' => 'Pendiente']);
+        $reservation = $this->makeReservation(['estado' => 'Reservado']);
 
         $response = $this->putJson("/api/reservations/{$reservation->id_reserva}", [
-            'estado' => 'Retirado',
+            'estado' => 'Completado',
         ]);
 
         $response->assertOk()->assertJsonFragment([
-            'estado' => 'Retirado',
+            'estado' => 'Completado',
         ]);
 
         $this->assertDatabaseHas('reservation_headers', [
             'id_reserva' => $reservation->id_reserva,
-            'estado' => 'Retirado',
+            'estado' => 'Completado',
         ]);
     }
 

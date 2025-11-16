@@ -15,7 +15,10 @@ class BookController extends Controller
     public function index(): JsonResponse
     {
         $books = Book::query()
-            ->with('category:id_categoria,nombre')
+            ->with([
+                'category:id_categoria,nombre',
+                'editorial:id_editorial,nombre',
+            ])
             ->orderBy('titulo')
             ->get();
 
@@ -38,19 +41,21 @@ class BookController extends Controller
         $data = $request->validate([
             'titulo' => ['required', 'string', 'max:150'],
             'autor' => ['required', 'string', 'max:100'],
-            'editorial' => ['nullable', 'string', 'max:100'],
+            'id_editorial' => ['nullable', 'exists:editorials,id_editorial'],
             'anio_publicacion' => ['nullable', 'integer', 'digits:4'],
             'isbn' => ['nullable', 'string', 'max:30', Rule::unique('books', 'isbn')],
             'id_categoria' => ['required', 'exists:categories,id_categoria'],
             'stock_actual' => ['nullable', 'integer', 'min:0'],
+            'precio_venta' => ['nullable', 'numeric', 'min:0'],
             'estado' => ['required', Rule::in(['Disponible', 'No disponible'])],
         ]);
 
         $data['stock_actual'] = $data['stock_actual'] ?? 0;
+        $data['precio_venta'] = $data['precio_venta'] ?? 0;
 
         $book = Book::create($data);
 
-        return response()->json($book->load('category'), 201);
+        return response()->json($book->load(['category', 'editorial']), 201);
     }
 
     /**
@@ -77,7 +82,7 @@ class BookController extends Controller
         $data = $request->validate([
             'titulo' => ['sometimes', 'required', 'string', 'max:150'],
             'autor' => ['sometimes', 'required', 'string', 'max:100'],
-            'editorial' => ['nullable', 'string', 'max:100'],
+            'id_editorial' => ['nullable', 'exists:editorials,id_editorial'],
             'anio_publicacion' => ['nullable', 'integer', 'digits:4'],
             'isbn' => [
                 'nullable',
@@ -87,12 +92,13 @@ class BookController extends Controller
             ],
             'id_categoria' => ['sometimes', 'required', 'exists:categories,id_categoria'],
             'stock_actual' => ['nullable', 'integer', 'min:0'],
+            'precio_venta' => ['nullable', 'numeric', 'min:0'],
             'estado' => ['sometimes', 'required', Rule::in(['Disponible', 'No disponible'])],
         ]);
 
         $book->update($data);
 
-        return response()->json($book->load('category'));
+        return response()->json($book->load(['category', 'editorial']));
     }
 
     /**

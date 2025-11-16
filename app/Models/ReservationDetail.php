@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\ReturnDetail;
 
 class ReservationDetail extends Model
 {
@@ -25,5 +27,24 @@ class ReservationDetail extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class, 'id_libro', 'id_libro');
+    }
+
+    public function returnDetails(): HasMany
+    {
+        return $this->hasMany(ReturnDetail::class, 'id_detalle_reserva', 'id_detalle_reserva');
+    }
+
+    public function returnedQuantity(): int
+    {
+        if ($this->relationLoaded('returnDetails')) {
+            return (int) $this->returnDetails->sum('cantidad_devuelta');
+        }
+
+        return (int) $this->returnDetails()->sum('cantidad_devuelta');
+    }
+
+    public function remainingQuantity(): int
+    {
+        return max($this->cantidad - $this->returnedQuantity(), 0);
     }
 }

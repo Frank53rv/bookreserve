@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\Concerns;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Client;
+use App\Models\Editorial;
 use App\Models\InventoryRecord;
 use App\Models\Movement;
 use App\Models\ReservationDetail;
@@ -34,18 +35,35 @@ trait CreatesLibraryEntities
             $category = $this->makeCategory();
         }
 
+        $editorial = $overrides['editorial_model'] ?? null;
+        if (! $editorial instanceof Editorial) {
+            $editorial = $this->makeEditorial();
+        }
+
         $attributes = array_merge([
             'titulo' => 'Libro ' . Str::random(10),
             'autor' => 'Autor ' . Str::random(10),
-            'editorial' => 'Editorial ' . Str::random(5),
             'anio_publicacion' => 2020,
             'isbn' => Str::upper(Str::random(13)),
             'id_categoria' => $category->id_categoria,
+            'id_editorial' => $editorial->id_editorial,
             'stock_actual' => 5,
+            'precio_venta' => 35,
             'estado' => 'Disponible',
-        ], Arr::except($overrides, ['category']));
+        ], Arr::except($overrides, ['category', 'editorial_model']));
 
         return Book::create($attributes);
+    }
+
+    protected function makeEditorial(array $overrides = []): Editorial
+    {
+        $defaults = [
+            'nombre' => 'Editorial ' . Str::random(6),
+            'pais' => 'Perú',
+            'contacto' => 'contacto@' . Str::lower(Str::random(5)) . '.test',
+        ];
+
+        return Editorial::create(array_merge($defaults, $overrides));
     }
 
     protected function makeClient(array $overrides = []): Client
@@ -73,7 +91,7 @@ trait CreatesLibraryEntities
         $attributes = array_merge([
             'id_cliente' => $client->id_cliente,
             'fecha_reserva' => Carbon::now(),
-            'estado' => 'Pendiente',
+            'estado' => ReservationHeader::STATES[0],
         ], Arr::except($overrides, ['client']));
 
         return ReservationHeader::create($attributes);

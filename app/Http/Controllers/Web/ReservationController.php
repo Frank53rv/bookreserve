@@ -19,7 +19,7 @@ class ReservationController extends Controller
 {
     public function index(): View
     {
-        $reservations = ReservationHeader::with(['client', 'details.book'])
+        $reservations = ReservationHeader::with(['client', 'details.book', 'details.returnDetails'])
             ->latest('fecha_reserva')
             ->paginate(10);
 
@@ -31,7 +31,8 @@ class ReservationController extends Controller
         $clients = Client::selectRaw("CONCAT(nombre, ' ', apellido) AS nombre_completo, id_cliente")
             ->orderBy('nombre_completo')
             ->pluck('nombre_completo', 'id_cliente');
-        $books = Book::orderBy('titulo')->pluck('titulo', 'id_libro');
+        $books = Book::orderBy('titulo')
+            ->get(['id_libro', 'titulo', 'stock_actual']);
 
         return view('reservations.create', compact('clients', 'books'));
     }
@@ -41,7 +42,8 @@ class ReservationController extends Controller
         $data = $request->validate([
             'id_cliente' => ['required', 'exists:clients,id_cliente'],
             'fecha_reserva' => ['required', 'date'],
-            'estado' => ['required', Rule::in(ReservationHeader::STATES)],
+            'fecha_estimada_devolucion' => ['nullable', 'date', 'after_or_equal:fecha_reserva'],
+            'estado' => ['nullable', Rule::in(ReservationHeader::STATES)],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id_libro' => ['required', 'exists:books,id_libro'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
@@ -59,13 +61,40 @@ class ReservationController extends Controller
                 ]);
             }
 
-            $reservation = ReservationHeader::create(collect($data)->except('items')->all());
+            $books = Book::whereIn('id_libro', $items->pluck('id_libro'))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id_libro');
+
+            foreach ($items as $item) {
+                $book = $books->get($item['id_libro']);
+                if (! $book) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El libro seleccionado no existe.',
+                    ]);
+                }
+
+                if ($book->stock_actual < $item['cantidad']) {
+                    throw ValidationException::withMessages([
+                        'items' => sprintf('"%s" no tiene stock suficiente. Disponible: %d.', $book->titulo, $book->stock_actual),
+                    ]);
+                }
+            }
+
+            $reservation = ReservationHeader::create(
+                collect($data)->except('items')
+                    ->put('estado', $data['estado'] ?? 'Reservado')
+                    ->all()
+            );
             $reservation->load('client');
 
-            $items->each(function (array $item) use ($reservation, $movementRecorder) {
+            $items->each(function (array $item) use ($reservation, $movementRecorder, $books) {
                 $detail = $reservation->details()->create($item)->load('book');
+                $books->get($item['id_libro'])?->decrement('stock_actual', $item['cantidad']);
                 $movementRecorder->recordReservationMovement($reservation, $detail);
             });
+
+            $reservation->refreshLoanState();
 
             return $reservation;
         });
@@ -75,7 +104,7 @@ class ReservationController extends Controller
 
     public function show(ReservationHeader $reservation): View
     {
-        $reservation->load(['client', 'details.book']);
+        $reservation->load(['client', 'details.book', 'details.returnDetails']);
 
         return view('reservations.show', compact('reservation'));
     }
@@ -86,24 +115,31 @@ class ReservationController extends Controller
         $clients = Client::selectRaw("CONCAT(nombre, ' ', apellido) AS nombre_completo, id_cliente")
             ->orderBy('nombre_completo')
             ->pluck('nombre_completo', 'id_cliente');
-        $books = Book::orderBy('titulo')->pluck('titulo', 'id_libro');
+        $books = Book::orderBy('titulo')->get(['id_libro', 'titulo', 'stock_actual']);
 
         return view('reservations.edit', compact('reservation', 'clients', 'books'));
     }
 
-    public function update(Request $request, ReservationHeader $reservation): RedirectResponse
+    public function update(Request $request, ReservationHeader $reservation, MovementRecorder $movementRecorder): RedirectResponse
     {
         $data = $request->validate([
             'id_cliente' => ['required', 'exists:clients,id_cliente'],
             'fecha_reserva' => ['required', 'date'],
-            'estado' => ['required', Rule::in(ReservationHeader::STATES)],
+            'fecha_estimada_devolucion' => ['nullable', 'date', 'after_or_equal:fecha_reserva'],
+            'estado' => ['nullable', Rule::in(ReservationHeader::STATES)],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id_libro' => ['required', 'exists:books,id_libro'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
         ]);
 
-        DB::transaction(function () use ($reservation, $data) {
-            $reservation->update(collect($data)->except('items')->all());
+        DB::transaction(function () use ($reservation, $data, $movementRecorder) {
+            $reservation->loadMissing('details.returnDetails', 'client');
+
+            if ($reservation->details->contains(fn ($detail) => $detail->returnDetails->isNotEmpty())) {
+                throw ValidationException::withMessages([
+                    'items' => 'No se puede modificar una reserva que ya tiene devoluciones registradas.',
+                ]);
+            }
 
             $items = collect($data['items'])->map(fn ($item) => [
                 'id_libro' => (int) $item['id_libro'],
@@ -116,8 +152,61 @@ class ReservationController extends Controller
                 ]);
             }
 
+            $bookIds = $items->pluck('id_libro')
+                ->merge($reservation->details->pluck('id_libro'))
+                ->unique();
+
+            $books = Book::whereIn('id_libro', $bookIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id_libro');
+
+            foreach ($reservation->details as $detail) {
+                $book = $books->get($detail->id_libro);
+
+                if (! $book) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El libro asociado a la reserva ya no existe.',
+                    ]);
+                }
+
+                $book->increment('stock_actual', $detail->cantidad);
+            }
+
+            Movement::where('id_reserva', $reservation->id_reserva)
+                ->where('tipo_movimiento', 'Salida')
+                ->delete();
+
             $reservation->details()->delete();
-            $reservation->details()->createMany($items->all());
+
+            $payload = collect($data)->except('items');
+            if (blank($payload->get('estado'))) {
+                $payload->forget('estado');
+            }
+
+            $reservation->update($payload->all());
+
+            $items->each(function (array $item) use ($reservation, $movementRecorder, $books) {
+                $book = $books->get($item['id_libro']);
+
+                if (! $book) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El libro seleccionado no existe.',
+                    ]);
+                }
+
+                if ($book->stock_actual < $item['cantidad']) {
+                    throw ValidationException::withMessages([
+                        'items' => sprintf('"%s" no tiene stock suficiente. Disponible: %d.', $book->titulo, $book->stock_actual),
+                    ]);
+                }
+
+                $detail = $reservation->details()->create($item)->load('book');
+                $book->decrement('stock_actual', $item['cantidad']);
+                $movementRecorder->recordReservationMovement($reservation, $detail);
+            });
+
+            $reservation->refreshLoanState();
         });
 
         return redirect()->route('web.reservations.show', $reservation)->with('status', 'Reserva actualizada correctamente.');
@@ -165,7 +254,29 @@ class ReservationController extends Controller
 
     public function destroy(ReservationHeader $reservation): RedirectResponse
     {
-        $reservation->delete();
+        DB::transaction(function () use ($reservation) {
+            $reservation->loadMissing('details.returnDetails');
+
+            if ($reservation->details->contains(fn ($detail) => $detail->returnDetails->isNotEmpty())) {
+                throw ValidationException::withMessages([
+                    'items' => 'No se puede eliminar una reserva que ya tiene devoluciones registradas.',
+                ]);
+            }
+
+            $bookIds = $reservation->details->pluck('id_libro')->unique();
+            $books = Book::whereIn('id_libro', $bookIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id_libro');
+
+            foreach ($reservation->details as $detail) {
+                $books->get($detail->id_libro)?->increment('stock_actual', $detail->cantidad);
+            }
+
+            Movement::where('id_reserva', $reservation->id_reserva)->delete();
+
+            $reservation->delete();
+        });
 
         return redirect()->route('web.reservations.index')->with('status', 'Reserva eliminada correctamente.');
     }

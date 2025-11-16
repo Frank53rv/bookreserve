@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Category;
+use App\Models\Editorial;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class BookController extends Controller
 {
     public function index(): View
     {
-        $books = Book::with('category')
+        $books = Book::with(['category', 'editorial'])
             ->withCount('reservationDetails')
             ->orderBy('titulo')
             ->paginate(12);
@@ -25,8 +26,9 @@ class BookController extends Controller
     public function create(): View
     {
         $categories = Category::orderBy('nombre')->pluck('nombre', 'id_categoria');
+        $editorials = Editorial::orderBy('nombre')->pluck('nombre', 'id_editorial');
 
-        return view('books.create', compact('categories'));
+        return view('books.create', compact('categories', 'editorials'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -36,11 +38,12 @@ class BookController extends Controller
         $data = $request->validate([
             'titulo' => ['required', 'string', 'max:150'],
             'autor' => ['required', 'string', 'max:100'],
-            'editorial' => ['nullable', 'string', 'max:100'],
+            'id_editorial' => ['nullable', 'exists:editorials,id_editorial'],
             'anio_publicacion' => ['nullable', 'integer', 'between:1500,' . $currentYear],
             'isbn' => ['nullable', 'string', 'max:30'],
             'id_categoria' => ['required', 'exists:categories,id_categoria'],
             'stock_actual' => ['required', 'integer', 'min:0'],
+            'precio_venta' => ['required', 'numeric', 'min:0'],
             'estado' => ['required', 'in:Disponible,No disponible'],
         ]);
 
@@ -51,7 +54,7 @@ class BookController extends Controller
 
     public function show(Book $book): View
     {
-        $book->load('category');
+        $book->load('category', 'editorial');
 
         return view('books.show', compact('book'));
     }
@@ -59,8 +62,9 @@ class BookController extends Controller
     public function edit(Book $book): View
     {
         $categories = Category::orderBy('nombre')->pluck('nombre', 'id_categoria');
+        $editorials = Editorial::orderBy('nombre')->pluck('nombre', 'id_editorial');
 
-        return view('books.edit', compact('book', 'categories'));
+        return view('books.edit', compact('book', 'categories', 'editorials'));
     }
 
     public function update(Request $request, Book $book): RedirectResponse
@@ -70,11 +74,12 @@ class BookController extends Controller
         $data = $request->validate([
             'titulo' => ['required', 'string', 'max:150'],
             'autor' => ['required', 'string', 'max:100'],
-            'editorial' => ['nullable', 'string', 'max:100'],
+            'id_editorial' => ['nullable', 'exists:editorials,id_editorial'],
             'anio_publicacion' => ['nullable', 'integer', 'between:1500,' . $currentYear],
             'isbn' => ['nullable', 'string', 'max:30'],
             'id_categoria' => ['required', 'exists:categories,id_categoria'],
             'stock_actual' => ['required', 'integer', 'min:0'],
+            'precio_venta' => ['required', 'numeric', 'min:0'],
             'estado' => ['required', 'in:Disponible,No disponible'],
         ]);
 

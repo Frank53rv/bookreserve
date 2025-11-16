@@ -58,5 +58,12 @@ return [
             'active' => 'web.movements.*',
             'description' => 'Consulta el historial de movimientos de inventario.',
         ],
+        [
+            'label' => 'Ventas',
+            'route' => 'web.sales.index',
+            'icon' => 'bi-receipt-cutoff',
+            'active' => 'web.sales.*',
+            'description' => 'Registra ventas al público y genera tickets PDF.',
+        ],
     ],
 ];
