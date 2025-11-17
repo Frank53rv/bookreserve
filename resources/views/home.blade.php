@@ -2,7 +2,14 @@
 
 @section('content')
 @php
-    $quickLinks = collect($navigationItems)->reject(fn ($item) => $item['route'] === 'home');
+    $quickLinks = collect($navigationItems)
+        ->reject(fn ($item) => isset($item['route']) && $item['route'] === 'home')
+        ->flatMap(function ($item) {
+            if (isset($item['dropdown'])) {
+                return $item['dropdown'];
+            }
+            return [$item];
+        });
     $heroMetrics = [
         [
             'label' => 'Reservas activas',

@@ -31,4 +31,14 @@ class Client extends Model
     {
         return $this->hasMany(Movement::class, 'id_cliente', 'id_cliente');
     }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(ReservationHeader::class, 'id_cliente', 'id_cliente');
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(SaleHeader::class, 'id_cliente', 'id_cliente');
+    }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\BookController;
 use App\Http\Controllers\Web\CategoryController;
 use App\Http\Controllers\Web\ClientController;
+use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryRecordController;
 use App\Http\Controllers\Web\MovementController;
 use App\Http\Controllers\Web\ReservationController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Web\ReturnDetailController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::resource('categories', CategoryController::class)->names('web.categories');
 Route::resource('books', BookController::class)->names('web.books');

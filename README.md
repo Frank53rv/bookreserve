@@ -32,11 +32,6 @@ BookReserve es una aplicacion web construida con Laravel 12 y Vite que sirve com
 - `resources/` incluye vistas Blade, componentes de JavaScript y estilos.
 - `routes/` define las rutas HTTP y consola.
 
-## Proximos pasos sugeridos
-
-- Configurar la conexion a la base de datos preferida en `.env`.
-- Definir modelos, migraciones y controladores para gestionar reservas.
-- Personalizar los assets front-end en `resources/js` y `resources/css`.
 
 ## API y controladores
 
@@ -45,3 +40,8 @@ BookReserve es una aplicacion web construida con Laravel 12 y Vite que sirve com
 - Todas las rutas usan el grupo de middleware `api` definido por Laravel: incluye `throttle:api`, control de estado sin sesiones y formato de respuesta en JSON.
 - Para invocar los endpoints basta con hacer solicitudes HTTP con encabezado `Accept: application/json`; las respuestas incluiran datos serializados y codigos de estado apropiados (201 al crear, 204 al eliminar).
 - Si no deseas trabajar con JSON o APIs, puedes crear controladores de tipo web con vistas Blade y registrarlos en `routes/web.php` usando el middleware `web`.
+
+TO do 
+Autenticación y Roles (fundamental para seguridad)
+Sistema de Multas (genera ingresos adicionales)
+Reportes Avanzados (ya tienes dashboard, complementaría bien) 

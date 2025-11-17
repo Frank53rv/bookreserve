@@ -52,8 +52,8 @@
     <div class="col-md-4">
         <label for="precio_venta" class="form-label">Precio de venta</label>
         <div class="input-group">
-            <span class="input-group-text">$</span>
-            <input type="number" step="0.01" class="form-control" id="precio_venta" name="precio_venta" value="{{ old('precio_venta', $book->precio_venta ?? 0) }}" min="0" required>
+            <span class="input-group-text">Gs.</span>
+            <input type="number" step="1" class="form-control" id="precio_venta" name="precio_venta" value="{{ old('precio_venta', $book->precio_venta ?? 0) }}" min="0" required>
         </div>
     </div>
     <div class="col-md-4">

@@ -18,7 +18,7 @@
                     <dt class="col-sm-4">Categoría</dt>
                     <dd class="col-sm-8">{{ $book->category?->nombre ?? 'Sin categoría' }}</dd>
                     <dt class="col-sm-4">Precio de venta</dt>
-                    <dd class="col-sm-8">${{ number_format($book->precio_venta ?? 0, 2) }}</dd>
+                    <dd class="col-sm-8">Gs. {{ number_format($book->precio_venta ?? 0, 0, ',', '.') }}</dd>
                     <dt class="col-sm-4">Stock actual</dt>
                     <dd class="col-sm-8">{{ $book->stock_actual }}</dd>
                     <dt class="col-sm-4">Estado</dt>

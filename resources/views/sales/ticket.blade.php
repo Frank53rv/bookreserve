@@ -50,15 +50,15 @@
             <tr>
                 <td>{{ $detail->book?->titulo ?? ('Libro #' . $detail->id_libro) }}</td>
                 <td>{{ $detail->cantidad }}</td>
-                <td>S/ {{ number_format($detail->precio_unitario, 2, '.', ',') }}</td>
-                <td>S/ {{ number_format($detail->subtotal, 2, '.', ',') }}</td>
+                <td>Gs. {{ number_format($detail->precio_unitario, 0, ',', '.') }}</td>
+                <td>Gs. {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
 
-    <div class="totals">
-        <strong>Total: S/ {{ number_format($sale->total ?? 0, 2, '.', ',') }}</strong>
+    <div class="total">
+        <strong>Total: Gs. {{ number_format($sale->total ?? 0, 0, ',', '.') }}</strong>
     </div>
 
     @if ($sale->notas)

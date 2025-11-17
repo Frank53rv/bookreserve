@@ -131,6 +131,44 @@
             transform: scaleX(1);
         }
 
+        .navbar-modern .dropdown-menu {
+            background: rgba(3, 4, 15, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(2, 6, 23, 0.65);
+            backdrop-filter: blur(18px);
+            padding: 0.5rem;
+            margin-top: 0.75rem;
+            min-width: 220px;
+        }
+
+        .navbar-modern .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .navbar-modern .dropdown-item:hover,
+        .navbar-modern .dropdown-item:focus {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-2);
+        }
+
+        .navbar-modern .dropdown-item i {
+            font-size: 1.1rem;
+            width: 1.25rem;
+        }
+
+        .navbar-modern .dropdown-toggle::after {
+            margin-left: 0.35rem;
+            vertical-align: 0.15em;
+        }
+
         main.modern-main {
             padding: clamp(2.5rem, 4vw, 4rem) 0 4rem;
         }
@@ -556,16 +594,45 @@
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 @foreach ($navigationItems as $item)
-                    @php
-                        $activePattern = $item['active'] ?? $item['route'];
-                        $isActive = request()->routeIs($activePattern);
-                    @endphp
-                    <li class="nav-item">
-                        <a class="nav-link {{ $isActive ? 'active' : '' }}" href="{{ route($item['route']) }}">
-                            <i class="bi {{ $item['icon'] }}"></i>
-                            {{ $item['label'] }}
-                        </a>
-                    </li>
+                    @if (isset($item['dropdown']))
+                        @php
+                            $activePatterns = explode('|', $item['active'] ?? '');
+                            $isActive = false;
+                            foreach ($activePatterns as $pattern) {
+                                if (request()->routeIs($pattern)) {
+                                    $isActive = true;
+                                    break;
+                                }
+                            }
+                        @endphp
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {{ $isActive ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi {{ $item['icon'] }}"></i>
+                                {{ $item['label'] }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                @foreach ($item['dropdown'] as $subItem)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route($subItem['route']) }}">
+                                            <i class="bi {{ $subItem['icon'] }}"></i>
+                                            {{ $subItem['label'] }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </li>
+                    @else
+                        @php
+                            $activePattern = $item['active'] ?? $item['route'];
+                            $isActive = request()->routeIs($activePattern);
+                        @endphp
+                        <li class="nav-item">
+                            <a class="nav-link {{ $isActive ? 'active' : '' }}" href="{{ route($item['route']) }}">
+                                <i class="bi {{ $item['icon'] }}"></i>
+                                {{ $item['label'] }}
+                            </a>
+                        </li>
+                    @endif
                 @endforeach
             </ul>
         </div>

@@ -65,7 +65,7 @@
                 @error('items')<div class="text-danger small mb-3">{{ $message }}</div>@enderror
                 <div id="saleItemsContainer" class="d-flex flex-column gap-3"></div>
                 <div class="text-end mt-3">
-                    <span class="status-pill"><i class="bi bi-cash-stack"></i> Total estimado: <strong id="saleTotal">S/ 0.00</strong></span>
+                    <span class="status-pill"><i class="bi bi-cash-stack"></i> Total estimado: <strong id="saleTotal">Gs. 0</strong></span>
                 </div>
             </div>
 
@@ -98,12 +98,12 @@
                 <input type="number" name="items[__INDEX__][cantidad]" class="form-control sale-item-qty" min="1" value="1" required>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Precio unitario (S/)</label>
-                <input type="number" name="items[__INDEX__][precio_unitario]" step="0.01" min="0" class="form-control sale-item-price" placeholder="Auto">
+                <label class="form-label">Precio unitario (Gs.)</label>
+                <input type="number" name="items[__INDEX__][precio_unitario]" step="1" min="0" class="form-control sale-item-price" placeholder="Auto">
             </div>
         </div>
         <div class="text-end mt-2">
-            <small class="text-muted">Subtotal: <strong class="sale-item-subtotal">S/ 0.00</strong></small>
+            <small class="text-muted">Subtotal: <strong class="sale-item-subtotal">Gs. 0</strong></small>
         </div>
     </div>
 </template>
@@ -119,7 +119,7 @@
         const previousItems = Object.values(@json(old('items', [])));
         let index = 0;
 
-        const formatCurrency = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
+        const formatCurrency = new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 });
 
         function updateItemNumbers() {
             container.querySelectorAll('.sale-item-card').forEach((card, idx) => {

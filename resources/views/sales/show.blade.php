@@ -80,8 +80,8 @@
                             </div>
                         </td>
                         <td>{{ $detail->cantidad }}</td>
-                        <td>S/ {{ number_format($detail->precio_unitario, 2, '.', ',') }}</td>
-                        <td>S/ {{ number_format($detail->subtotal, 2, '.', ',') }}</td>
+                        <td>Gs. {{ number_format($detail->precio_unitario, 0, ',', '.') }}</td>
+                        <td>Gs. {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
                 </tbody>

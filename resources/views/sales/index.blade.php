@@ -56,7 +56,7 @@
                             <td>
                                 <div class="table-cell-note">
                                     <i class="bi bi-cash"></i>
-                                    <div>S/ {{ number_format($sale->total ?? 0, 2, '.', ',') }}</div>
+                                    <div>Gs. {{ number_format($sale->total ?? 0, 0, ',', '.') }}</div>
                                 </div>
                             </td>
                             <td>{{ $sale->details_count }}</td>

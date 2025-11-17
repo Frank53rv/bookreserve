@@ -283,7 +283,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <span class="book-chip-status{{ $statusModifier ? ' ' . $statusModifier : '' }}"><i class="bi bi-box-seam"></i> Stock: {{ $stock }}</span>
                     <span class="book-chip"><i class="bi bi-lightning"></i> Estado: {{ ucfirst($book->estado) }}</span>
-                    <span class="book-chip"><i class="bi bi-cash-coin"></i> ${{ number_format($book->precio_venta ?? 0, 2) }}</span>
+                    <span class="book-chip"><i class="bi bi-cash-coin"></i> Gs. {{ number_format($book->precio_venta ?? 0, 0, ',', '.') }}</span>
                 </div>
                 <div class="book-card-footer">
                     <a href="{{ route('web.books.show', $book) }}" class="btn btn-outline-soft"><i class="bi bi-eye"></i> Ver</a>
