@@ -86,5 +86,12 @@ return [
                 ],
             ],
         ],
+        [
+            'label' => 'Reportes',
+            'route' => 'web.reports.index',
+            'icon' => 'bi-file-earmark-bar-graph',
+            'active' => 'web.reports.*',
+            'description' => 'Genera reportes avanzados en PDF y Excel.',
+        ],
     ],
 ];

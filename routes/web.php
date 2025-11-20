@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\ClientController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InventoryRecordController;
 use App\Http\Controllers\Web\MovementController;
+use App\Http\Controllers\Web\ReportsController;
 use App\Http\Controllers\Web\ReservationController;
 use App\Http\Controllers\Web\ReservationDetailController;
 use App\Http\Controllers\Web\SaleController;
@@ -33,3 +34,7 @@ Route::resource('inventory-records', InventoryRecordController::class)->names('w
 Route::resource('movements', MovementController::class)->names('web.movements');
 Route::get('sales/{sale}/ticket', [SaleController::class, 'ticket'])->name('web.sales.ticket');
 Route::resource('sales', SaleController::class)->names('web.sales');
+Route::get('reports/preview', [ReportsController::class, 'preview'])->name('web.reports.preview');
+Route::post('reports/generate', [ReportsController::class, 'generate'])->name('web.reports.generate');
+Route::get('reports/{report}/download', [ReportsController::class, 'download'])->name('web.reports.download');
+Route::resource('reports', ReportsController::class)->except(['show', 'edit', 'update'])->names('web.reports');
